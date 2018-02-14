@@ -17,7 +17,7 @@ package com.signocom.signomix.client;
 
 /**
  *
- * @author Grzegorz Skorupa <g.skorupa at gmail.com>
+ * @author Grzegorz Skorupa &lt;g.skorupa at gmail.com&gt;
  */
 public class ClientException extends Exception {
     

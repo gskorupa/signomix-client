@@ -27,7 +27,7 @@ import java.util.logging.Logger;
 
 /**
  *
- * @author Grzegorz Skorupa <g.skorupa at gmail.com>
+ * @author Grzegorz Skorupa &lt;g.skorupa at gmail.com&gt;
  */
 public class SignomixClient {
 
@@ -47,7 +47,7 @@ public class SignomixClient {
         String url;
         //url = "https://signomix.signocom.com";
         url = "http://localhost:8080";
-        SignomixClient client = new SignomixClient(url, true, 1, "main");
+        SignomixClient client = new SignomixClient(url, true, 1, "main"); 
 
         // login
         try {
@@ -105,6 +105,15 @@ public class SignomixClient {
 
     }
 
+    /**
+     * Constructor
+     * 
+     * @param url Signomix platform base address
+     * @param trustAllCertificates omit to check SSL certificates
+     * @param retries number of request retries in case of errors (eg session timeout). 
+     * When greater than 0 the client will try to re-login automatically
+     * @param loggingFilter 
+     */
     public SignomixClient(String url, boolean trustAllCertificates, int retries, String loggingFilter) {
         this.serviceUrl = url;
         this.trustAllCertificates = trustAllCertificates;
@@ -113,7 +122,8 @@ public class SignomixClient {
     }
 
     /**
-     * Log in to Signomix and get session token
+     * Log in to Signomix and get session token. The token and credentials used (login, password) 
+     * are stored internally for for future use.
      *
      * @param endpoint authentication API endpoint
      * @param login user login
