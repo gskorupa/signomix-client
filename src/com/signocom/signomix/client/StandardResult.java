@@ -15,19 +15,19 @@
  */
 package com.signocom.signomix.client;
 
-import com.sun.net.httpserver.Headers;
+//import com.sun.net.httpserver.Headers;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.List;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
+//import java.util.List;
+//import javax.xml.bind.annotation.XmlAccessType;
+//import javax.xml.bind.annotation.XmlAccessorType;
 
 /**
  *
  * @author greg
  */
 
-@XmlAccessorType (XmlAccessType.FIELD)
+//@XmlAccessorType (XmlAccessType.FIELD)
 public class StandardResult implements Result {
     
     public final static int SC_OK = 200;
@@ -59,7 +59,7 @@ public class StandardResult implements Result {
     private Date modificationDate;
     private String modificationDateFormatted;
     private int maxAge;
-    private Headers headers;
+    //private Headers headers;
     
     private long responseTime;
 
@@ -67,7 +67,7 @@ public class StandardResult implements Result {
         setCode(SC_OK);
         setModificationDate(new Date());
         maxAge = 0;
-        headers = new Headers();
+        //headers = new Headers();
         responseTime = 0;
     }
 
@@ -76,7 +76,7 @@ public class StandardResult implements Result {
         setData(data);
         setModificationDate(new Date());
         maxAge = 0;
-        headers = new Headers();
+        //headers = new Headers();
     }
 
     /**

@@ -51,7 +51,7 @@ public class SignomixClient {
 
         // login
         try {
-            client.getSessionToken("/api/auth", "piotrektest", "password");
+            client.getSessionToken("/api/auth", "piotrektest", "paswd");
             client.logInfo("main", "token: " + client.token);
         } catch (ClientException ex) {
             Logger.getLogger(SignomixClient.class.getName()).log(Level.SEVERE, null, ex);
