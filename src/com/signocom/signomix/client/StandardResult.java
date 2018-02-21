@@ -166,6 +166,7 @@ public class StandardResult implements Result {
         this.maxAge = maxAge;
     }
     
+    /*
     @Override
     public void setHeader(String name, String value){
         headers.add(name, value);
@@ -180,7 +181,8 @@ public class StandardResult implements Result {
     public Headers getHeaders(){
         return headers;
     }
-
+    */
+    
     @Override
     public void setResponseTime(long time) {
         responseTime = time;

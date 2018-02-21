@@ -45,13 +45,13 @@ public class SignomixClient {
     public static void main(String[] args) {
 
         String url;
-        //url = "https://signomix.signocom.com";
-        url = "http://localhost:8080";
+        url = "https://signomix.signocom.com";
+        //url = "http://localhost:8080";
         SignomixClient client = new SignomixClient(url, true, 1, "main"); 
 
         // login
         try {
-            client.getSessionToken("/api/auth", "tester1", "signocom");
+            client.getSessionToken("/api/auth", "piotrektest", "password");
             client.logInfo("main", "token: " + client.token);
         } catch (ClientException ex) {
             Logger.getLogger(SignomixClient.class.getName()).log(Level.SEVERE, null, ex);
@@ -59,24 +59,25 @@ public class SignomixClient {
 
         // request user data
         try {
-            String userData = client.getUser("/api/user", "tester1");
+            String userData = client.getUser("/api/user", "piotrektest");
             client.logInfo("main", userData);
         } catch (ClientException ex) {
             Logger.getLogger(SignomixClient.class.getName()).log(Level.SEVERE, null, ex);
         }
 
         // register device
+        /*
         try {
-            String deviceEUI = client.registerDevice("/api/iot", "PHONE1", "longitude,latitude,battery");
+            String deviceEUI = client.registerDevice("/api/iot", "12345", "longitude,latitude");
             client.logInfo("main", deviceEUI);
         } catch (ClientException ex) {
             Logger.getLogger(SignomixClient.class.getName()).log(Level.SEVERE, null, ex);
         }
-
+        */
         // request device data
         String deviceKey=null;
         try {
-            String deviceConfig = client.getDevice("/api/iot", "PHONE1");
+            String deviceConfig = client.getDevice("/api/iot", "12345");
             client.logInfo("main", deviceConfig);
             deviceKey=client.getDeviceKey(deviceConfig);
         } catch (ClientException ex) {
@@ -85,11 +86,11 @@ public class SignomixClient {
 
         // send measured data from the device
         HashMap<String, String> params = new HashMap<>();
-        params.put("longitude", "123456");
-        params.put("latitude", "7890");
-        params.put("battery","100");
+        params.put("longitude", "12.3456");
+        params.put("latitude", "7.890");
+        //params.put("battery","100");
         try {
-            String result = client.sendData("/api/integration", "PHONE1", deviceKey, params);
+            String result = client.sendData("/api/integration", "12345", deviceKey, params);
             client.logInfo("main", "SendData: " + result);
         } catch (ClientException ex) {
             Logger.getLogger(SignomixClient.class.getName()).log(Level.SEVERE, null, ex);
@@ -259,18 +260,18 @@ public class SignomixClient {
         StringBuilder sb = new StringBuilder();
         sb.append("data={\"dev_eui\":\"")
                 .append(deviceEUI)
-                .append("\",\"timestamp\":\"")
+                .append("\",\"timestamp\":")
                 .append(System.currentTimeMillis())
-                .append("\",\"payload_fields\":[");
+                .append(",\"payload_fields\":[");
         Iterator it = data.keySet().iterator();
         String key;
         while (it.hasNext()) {
             key = (String) it.next();
             sb.append("{\"name\":\"")
                     .append((String) key)
-                    .append("\",\"value\":\"")
+                    .append("\",\"value\":")
                     .append((String) data.get(key))
-                    .append("\"}");
+                    .append("}");
             if (it.hasNext()) {
                 sb.append(",");
             }
@@ -282,6 +283,7 @@ public class SignomixClient {
         Request req = new Request();
         req.setMethod("POST");
         req.setProperty("Accept", "text/plain");
+        req.setProperty("Content-Type", "text/plain");
         req.setProperty("Authorization", deviceKey);
         req.setData(dataAsJson); // data must be added to POST or PUT requests
         StandardResult res = (StandardResult) client.send(this.serviceUrl + endpoint, req, null, false, trustAllCertificates);

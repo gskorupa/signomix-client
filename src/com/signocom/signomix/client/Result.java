@@ -15,7 +15,7 @@
  */
 package com.signocom.signomix.client;
 
-import com.sun.net.httpserver.Headers;
+//import com.sun.net.httpserver.Headers;
 import java.util.Date;
 import java.util.List;
 
@@ -71,12 +71,12 @@ public interface Result {
     
     public int getMaxAge();
     public void setMaxAge(int maxAge);
-    
+    /*
     public void setHeader(String name, String value);
     public void setHeader(String name, List values);
     
     public Headers getHeaders();
-    
+    */
     public void setResponseTime(long time);
     public long getResponseTime();
     

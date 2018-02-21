@@ -1,0 +1,11 @@
+{
+    "dev_eui": "12345",
+    "timestamp": 1519235973887,
+    "payload_fields": [{
+            "name": "latitude",
+            "value": "7890"
+        }, {
+            "name": "longitude",
+            "value": "123456"
+        }]
+}
