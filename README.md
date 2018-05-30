@@ -8,3 +8,4 @@ An example of using the library can be found in the SignimixClient. main () meth
 Before you start, make sure you have created your account at  [https://signomix.signocom.com](https://signomix.signocom.com)
 
 More information [https://signomix.signocom.com/#doc,developer](https://signomix.signocom.com/#doc,developer)
+

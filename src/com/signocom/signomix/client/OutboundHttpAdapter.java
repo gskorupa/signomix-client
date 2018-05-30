@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Grzegorz Skorupa <g.skorupa at gmail.com>.
+ * Copyright 2017 Grzegorz Skorupa <g.skorupa at gmail.com>.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,14 +49,12 @@ public class OutboundHttpAdapter {
     private final String CSV = "text/csv";
     private final String HTML = "text/html";
     private final String TEXT = "text/plain";
-    private final String XML = "text/xml";
-    
+    private final String XML = "text/xml"; 
     protected int timeout = 0;
+    private final int SC_CONNECTION_REFUSED = 111;
 
-    //public HashMap<String, String> properties = new HashMap<>();
     private boolean isRequestSuccessful(int code) {
-        //return code == HttpURLConnection.HTTP_ACCEPTED || code == HttpURLConnection.HTTP_CREATED || code == HttpURLConnection.HTTP_OK;
-        return true;
+        return code == HttpURLConnection.HTTP_OK || code == HttpURLConnection.HTTP_CREATED || code == HttpURLConnection.HTTP_ACCEPTED;
     }
 
     public Result send(String url, Request request, Object data, boolean transform, boolean ignoreCertificateCheck) {
@@ -84,10 +82,6 @@ public class OutboundHttpAdapter {
                     requestData = translateToHtml(request.data);
                     break;
                 default:
-                //Kernel.getInstance().dispatchEvent(
-                //        Event.logSevere(this.getClass().getSimpleName(),
-                //                "unsupported content type: " + request.properties.get("Content-Type"))
-                //);
             }
         } else {
             if (request.data != null) {
@@ -104,17 +98,13 @@ public class OutboundHttpAdapter {
             URL urlObj = new URL(url);
             HttpURLConnection con;
             HttpsURLConnection scon;
-            // TODO: Proxy proxy = new Proxy(Proxy.Type.HTTP, sa);
             if (url.toUpperCase().startsWith("HTTPS")) {
                 if (ignoreCertificateCheck) {
                     HttpsURLConnection.setDefaultSSLSocketFactory(getTrustAllSocketFactory());
                 }
                 scon = (HttpsURLConnection) urlObj.openConnection();
-                //print_https_cert(scon);
                 scon.setReadTimeout(timeout);
                 scon.setConnectTimeout(timeout);
-                //TODO: this adapter can block entire service waiting for timeout.
-                //TODO: probably not a problem after multithreading have been introduced
                 scon.setRequestMethod(request.method);
                 for (String key : request.properties.keySet()) {
                     scon.setRequestProperty(key, request.properties.get(key));
@@ -129,7 +119,6 @@ public class OutboundHttpAdapter {
                     }
                 }
                 scon.connect();
-                //print_https_cert(scon);
                 result.setCode(scon.getResponseCode());
                 result.setResponseTime(System.currentTimeMillis() - startPoint);
                 if (isRequestSuccessful(result.getCode())) {
@@ -151,8 +140,6 @@ public class OutboundHttpAdapter {
                 con = (HttpURLConnection) urlObj.openConnection();
                 con.setReadTimeout(timeout);
                 con.setConnectTimeout(timeout);
-                //TODO: this adapter can block entire service waiting for timeout.
-                //TODO: probably not a problem after multithreading have been introduced
                 con.setRequestMethod(request.method);
                 for (String key : request.properties.keySet()) {
                     con.setRequestProperty(key, request.properties.get(key));
@@ -201,9 +188,10 @@ public class OutboundHttpAdapter {
             }
         } catch (IOException e) {
             String message = e.getMessage();
-            result.setCode(result.SC_INTERNAL_SERVER_ERROR);
+            result.setCode(SC_CONNECTION_REFUSED);
             result.setMessage(message);
-        } catch (NoSuchAlgorithmException | KeyManagementException e) {
+        } 
+        catch (NoSuchAlgorithmException | KeyManagementException e) {
             String message = e.getMessage();
             result.setCode(result.SC_UPGRADE_REQUIRED);
             result.setMessage(message);
@@ -256,13 +244,14 @@ public class OutboundHttpAdapter {
 
     private SSLSocketFactory getTrustAllSocketFactory() throws NoSuchAlgorithmException, KeyManagementException {
         TrustManager[] trustAllCerts = new TrustManager[]{new X509TrustManager() {
+            @Override
             public X509Certificate[] getAcceptedIssuers() {
                 return null;
             }
-
+            @Override
             public void checkClientTrusted(X509Certificate[] certs, String authType) {
             }
-
+            @Override
             public void checkServerTrusted(X509Certificate[] certs, String authType) {
             }
         }};
@@ -273,15 +262,11 @@ public class OutboundHttpAdapter {
     }
 
     private void print_https_cert(HttpsURLConnection con) {
-
         if (con != null) {
-
             try {
-
                 System.out.println("Response Code : " + con.getResponseCode());
                 System.out.println("Cipher Suite : " + con.getCipherSuite());
                 System.out.println("\n");
-
                 Certificate[] certs = con.getServerCertificates();
                 for (Certificate cert : certs) {
                     System.out.println("Cert Type : " + cert.getType());
@@ -292,14 +277,11 @@ public class OutboundHttpAdapter {
                             + cert.getPublicKey().getFormat());
                     System.out.println("\n");
                 }
-
             } catch (SSLPeerUnverifiedException e) {
                 e.printStackTrace();
             } catch (IOException e) {
                 e.printStackTrace();
             }
-
         }
-
     }
 }

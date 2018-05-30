@@ -32,12 +32,16 @@ import java.util.logging.Logger;
 public class SignomixClient {
 
     private String serviceUrl = null;
-    private String loginEndpoint = null;
     private boolean trustAllCertificates = false;
     private String token = null;
     private String credentials = null;
     private int retries = 0;
     private String loggingFilter = null;
+
+    private final String authAPI = "/api/auth";
+    private final String userAPI = "/api/user";
+    private final String iotAPI = "/api/iot";
+    private final String integrationAPI = "/api/integration";
 
     /**
      * @param args the command line arguments
@@ -47,22 +51,22 @@ public class SignomixClient {
         String url;
         url = "https://signomix.signocom.com";
         //url = "http://localhost:8080";
-        SignomixClient client = new SignomixClient(url, true, 1, "main"); 
+        SignomixClient client = new SignomixClient(url, true, 1, "main");
 
         // login
         try {
-            client.getSessionToken("/api/auth", "piotrektest", "paswd");
+            client.getSessionToken("tester1", "signocom");
             client.logInfo("main", "token: " + client.token);
         } catch (ClientException ex) {
-            Logger.getLogger(SignomixClient.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(SignomixClient.class.getName()).log(Level.SEVERE, ex.getMessage());
         }
 
         // request user data
         try {
-            String userData = client.getUser("/api/user", "piotrektest");
+            String userData = client.getUser("tester1");
             client.logInfo("main", userData);
         } catch (ClientException ex) {
-            Logger.getLogger(SignomixClient.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(SignomixClient.class.getName()).log(Level.SEVERE, ex.getMessage());
         }
 
         // register device
@@ -73,47 +77,63 @@ public class SignomixClient {
         } catch (ClientException ex) {
             Logger.getLogger(SignomixClient.class.getName()).log(Level.SEVERE, null, ex);
         }
-        */
+         */
         // request device data
-        String deviceKey=null;
+        String deviceKey = null;
         try {
-            String deviceConfig = client.getDevice("/api/iot", "12345");
+            String deviceConfig = client.getDevice("iot-emulator");
             client.logInfo("main", deviceConfig);
-            deviceKey=client.getDeviceKey(deviceConfig);
+            deviceKey = client.getDeviceKey(deviceConfig);
         } catch (ClientException ex) {
-            Logger.getLogger(SignomixClient.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(SignomixClient.class.getName()).log(Level.SEVERE, ex.getMessage());
         }
 
-        // send measured data from the device
-        HashMap<String, String> params = new HashMap<>();
-        params.put("longitude", "12.3456");
-        params.put("latitude", "7.890");
-        //params.put("battery","100");
+        // get data
         try {
-            String result = client.sendData("/api/integration", "12345", deviceKey, params);
-            client.logInfo("main", "SendData: " + result);
+            String channelData = client.getDeviceData("iot-emulator", "temperature", 2);
+            client.logInfo("main", channelData);
         } catch (ClientException ex) {
-            Logger.getLogger(SignomixClient.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(SignomixClient.class.getName()).log(Level.SEVERE, ex.getMessage());
         }
-
         // logout
         try {
             boolean sessionClosed = client.closeSession();
             client.logInfo("main", "session closed: " + sessionClosed);
         } catch (ClientException ex) {
-            Logger.getLogger(SignomixClient.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(SignomixClient.class.getName()).log(Level.SEVERE, ex.getMessage());
         }
+
+        // send measured data from the device
+        HashMap<String, String> params = new HashMap<>();
+        /*
+        params.put("longitude", "12.3456");
+        params.put("latitude", "7.890");
+        params.put("battery","100");
+         */
+        params.put("temperature", "28");
+        params.put("humidity", "33.33");
+        try {
+            String result = client.sendData("iot-emulator", deviceKey, params);
+            client.logInfo("main", "SendData: " + result);
+        } catch (ClientException ex) {
+            Logger.getLogger(SignomixClient.class.getName()).log(Level.SEVERE, ex.getMessage());
+        }
+
+    }
+
+    public SignomixClient() {
 
     }
 
     /**
      * Constructor
-     * 
+     *
      * @param url Signomix platform base address
      * @param trustAllCertificates omit to check SSL certificates
-     * @param retries number of request retries in case of errors (eg session timeout). 
-     * When greater than 0 the client will try to re-login automatically
-     * @param loggingFilter 
+     * @param retries number of request retries in case of errors (eg session
+     * timeout). When greater than 0 the client will try to re-login
+     * automatically
+     * @param loggingFilter
      */
     public SignomixClient(String url, boolean trustAllCertificates, int retries, String loggingFilter) {
         this.serviceUrl = url;
@@ -123,16 +143,15 @@ public class SignomixClient {
     }
 
     /**
-     * Log in to Signomix and get session token. The token and credentials used (login, password) 
-     * are stored internally for for future use.
+     * Log in to Signomix and get session token. The token and credentials used
+     * (login, password) are stored internally for for future use.
      *
      * @param endpoint authentication API endpoint
      * @param login user login
      * @param password user password
      */
-    public void getSessionToken(String endpoint, String login, String password) throws ClientException {
+    public void getSessionToken(String login, String password) throws ClientException {
         setCredentials(login, password);
-        loginEndpoint = endpoint;
         refreshToken();
     }
 
@@ -148,7 +167,8 @@ public class SignomixClient {
         req.setProperty("Authentication", token);
         req.setData("p=ignotethis");
         req.setMethod("DELETE");
-        StandardResult res = (StandardResult) client.send(this.serviceUrl + loginEndpoint + "/" + token, req, null, false, trustAllCertificates);
+        String requestUrl = this.serviceUrl + authAPI + "/" + token;
+        StandardResult res = (StandardResult) client.send(requestUrl, req, null, false, trustAllCertificates);
         logInfo("closeSession", "" + res.getCode() + " " + res.getMessage() + " " + res.getResponseTime());
         if (res.getCode() != StandardResult.SC_OK) {
             throw new ClientException(res.getCode());
@@ -164,15 +184,16 @@ public class SignomixClient {
      * @param userLogin user ID (login)
      * @return user profile parameters
      */
-    public String getUser(String endpoint, String userLogin) throws ClientException {
+    public String getUser(String userLogin) throws ClientException {
+        OutboundHttpAdapter client = new OutboundHttpAdapter();
+        Request req = new Request();
+        req.setMethod("GET");
+        req.setProperty("Accept", "application/json");
+        req.setProperty("Authentication", token);
+        String requestUrl = this.serviceUrl + userAPI + "/" + userLogin;
         int counter = 0;
         while (counter <= retries) {
-            OutboundHttpAdapter client = new OutboundHttpAdapter();
-            Request req = new Request();
-            req.setMethod("GET");
-            req.setProperty("Accept", "application/json");
-            req.setProperty("Authentication", token);
-            StandardResult res = (StandardResult) client.send(this.serviceUrl + endpoint + "/" + userLogin, req, null, false, trustAllCertificates);
+            StandardResult res = (StandardResult) client.send(requestUrl, req, null, false, trustAllCertificates);
             logInfo("getUser", "" + res.getCode() + " " + res.getMessage() + " " + res.getResponseTime());
             switch (res.getCode()) {
                 case StandardResult.SC_OK:
@@ -203,7 +224,7 @@ public class SignomixClient {
      * @param parameters profile parameters to change
      * @return user profile parameters after modification
      */
-    public String modifyUser(String endpoint, String userLogin, HashMap parameters) throws ClientException{
+    public String modifyUser(String endpoint, String userLogin, HashMap parameters) throws ClientException {
         throw new ClientException(StandardResult.SC_NOT_IMPLEMENTED);
     }
 
@@ -214,15 +235,16 @@ public class SignomixClient {
      * @param deviceEUI
      * @return
      */
-    public String getDevice(String endpoint, String deviceEUI) throws ClientException{
+    public String getDevice(String deviceEUI) throws ClientException {
+        OutboundHttpAdapter client = new OutboundHttpAdapter();
+        Request req = new Request();
+        req.setMethod("GET");
+        req.setProperty("Accept", "application/json");
+        req.setProperty("Authentication", token);
+        String requestUrl = this.serviceUrl + iotAPI + "/" + deviceEUI;
         int counter = 0;
         while (counter <= retries) {
-            OutboundHttpAdapter client = new OutboundHttpAdapter();
-            Request req = new Request();
-            req.setMethod("GET");
-            req.setProperty("Accept", "application/json");
-            req.setProperty("Authentication", token);
-            StandardResult res = (StandardResult) client.send(this.serviceUrl + endpoint + "/" + deviceEUI, req, null, false, trustAllCertificates);
+            StandardResult res = (StandardResult) client.send(requestUrl, req, null, false, trustAllCertificates);
             logInfo("getDevice", "" + res.getCode() + " " + res.getMessage() + " " + res.getResponseTime());
             switch (res.getCode()) {
                 case StandardResult.SC_OK:
@@ -236,7 +258,48 @@ public class SignomixClient {
                     counter++;
                     if (counter <= retries) {
                         refreshToken();
-                    }   
+                    }
+                    break;
+                default:
+                    throw new ClientException(res.getCode());
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Get device parameters
+     *
+     * @param deviceEUI
+     * @return
+     */
+    public String getDeviceData(String deviceEUI, String channelName, int limit) throws ClientException {
+        int counter = 0;
+        while (counter <= retries) {
+            OutboundHttpAdapter client = new OutboundHttpAdapter();
+            Request req = new Request();
+            req.setMethod("GET");
+            req.setProperty("Accept", "application/json");
+            req.setProperty("Authentication", token);
+            String requestUri = this.serviceUrl + iotAPI + "/" + deviceEUI + "/" + channelName + "?query=last";
+            if (limit > 1) {
+                requestUri = requestUri.concat("%20" + limit);
+            }
+            StandardResult res = (StandardResult) client.send(requestUri, req, null, false, trustAllCertificates);
+            logInfo("getDeviceData", "" + res.getCode() + " " + res.getMessage() + " " + res.getResponseTime());
+            switch (res.getCode()) {
+                case StandardResult.SC_OK:
+                    try {
+                        return new String(res.getPayload(), "UTF-8");
+                    } catch (UnsupportedEncodingException ex) {
+                        logError("getDevice", ex.getMessage());
+                    }
+                case StandardResult.SC_SESSION_EXPIRED:
+                    logInfo("getDevice", "" + res.getCode() + " " + res.getMessage() + " " + res.getData());
+                    counter++;
+                    if (counter <= retries) {
+                        refreshToken();
+                    }
                     break;
                 default:
                     throw new ClientException(res.getCode());
@@ -249,16 +312,15 @@ public class SignomixClient {
      * Send measured data from the device. The data will be stored in the
      * device's data channels.
      *
-     * @param endpoint integration API endpoint
      * @param deviceEUI device EUI
      * @param deviceKey secret key of the device
      * @param data data map
      * @return Signomix response ("OK" or error message)
      */
-    public String sendData(String endpoint, String deviceEUI, String deviceKey, HashMap data) throws ClientException{
+    public String sendData(String deviceEUI, String deviceKey, HashMap data) throws ClientException {
         String dataAsJson;
         StringBuilder sb = new StringBuilder();
-        sb.append("data={\"dev_eui\":\"")
+        sb.append("{\"dev_eui\":\"")
                 .append(deviceEUI)
                 .append("\",\"timestamp\":")
                 .append(System.currentTimeMillis())
@@ -267,10 +329,13 @@ public class SignomixClient {
         String key;
         while (it.hasNext()) {
             key = (String) it.next();
-            sb.append("{\"name\":\"")
+            sb.append("{")
+                    .append("\"name\":\"")
                     .append((String) key)
                     .append("\",\"value\":")
+                    .append("\"")
                     .append((String) data.get(key))
+                    .append("\"")
                     .append("}");
             if (it.hasNext()) {
                 sb.append(",");
@@ -278,7 +343,7 @@ public class SignomixClient {
         }
         sb.append("]}");
         dataAsJson = sb.toString();
-        
+
         OutboundHttpAdapter client = new OutboundHttpAdapter();
         Request req = new Request();
         req.setMethod("POST");
@@ -286,8 +351,9 @@ public class SignomixClient {
         req.setProperty("Content-Type", "text/plain");
         req.setProperty("Authorization", deviceKey);
         req.setData(dataAsJson); // data must be added to POST or PUT requests
-        StandardResult res = (StandardResult) client.send(this.serviceUrl + endpoint, req, null, false, trustAllCertificates);
-        if(!(res.getCode() == StandardResult.SC_OK || res.getCode() == StandardResult.SC_CREATED)){
+        String requestUrl = this.serviceUrl + integrationAPI;
+        StandardResult res = (StandardResult) client.send(requestUrl, req, null, false, trustAllCertificates);
+        if (!(res.getCode() == StandardResult.SC_OK || res.getCode() == StandardResult.SC_CREATED)) {
             throw new ClientException(res.getCode());
         }
         String content = "";
@@ -301,7 +367,7 @@ public class SignomixClient {
         return content;
     }
 
-    public String registerDevice(String endpoint, String deviceEUI, String channels) throws ClientException{
+    public String registerDevice(String deviceEUI, String channels) throws ClientException {
         String data;
         StringBuilder sb = new StringBuilder();
         sb.append("eui=")
@@ -310,15 +376,16 @@ public class SignomixClient {
                 .append("channels=")
                 .append(channels); //TODO: encode
         data = sb.toString();
-        
+
         OutboundHttpAdapter client = new OutboundHttpAdapter();
         Request req = new Request();
         req.setMethod("POST");
         req.setProperty("Accept", "text/plain");
         req.setProperty("Authentication", token);
         req.setData(data); // data must be added to POST or PUT requests
-        StandardResult res = (StandardResult) client.send(this.serviceUrl + endpoint, req, null, false, trustAllCertificates);
-        if(res.getCode() != StandardResult.SC_CREATED){
+        String requestUrl = this.serviceUrl + iotAPI;
+        StandardResult res = (StandardResult) client.send(requestUrl, req, null, false, trustAllCertificates);
+        if (res.getCode() != StandardResult.SC_CREATED) {
             throw new ClientException(res.getCode(), res.getMessage());
         }
         String content = "";
@@ -331,7 +398,7 @@ public class SignomixClient {
         logInfo("registerDevice", "" + res.getCode() + " " + content + " " + res.getResponseTime());
         return content;
     }
-        
+
     /**
      * *************************************************************************
      * PRIVATE METHODS
@@ -344,7 +411,8 @@ public class SignomixClient {
         req.setProperty("Accept", "text/plain");
         req.setProperty("Authentication", "Basic " + credentials);
         req.setData("p=ignotethis"); // data must be added to POST or PUT requests
-        StandardResult res = (StandardResult) client.send(this.serviceUrl + loginEndpoint, req, null, false, trustAllCertificates);
+        String requestUrl = this.serviceUrl + authAPI;
+        StandardResult res = (StandardResult) client.send(requestUrl, req, null, false, trustAllCertificates);
         if (res.getCode() != StandardResult.SC_OK) {
             throw new ClientException(res.getCode());
         }
@@ -385,11 +453,11 @@ public class SignomixClient {
         Date date = new Date();
         return dateFormat.format(date);
     }
-    
-    private String getDeviceKey(String deviceDefinition){
+
+    private String getDeviceKey(String deviceDefinition) {
         String key;
-        int pos=deviceDefinition.indexOf("\"key\":");
-        key=deviceDefinition.substring(pos+7, deviceDefinition.indexOf("\"", pos+7));
+        int pos = deviceDefinition.indexOf("\"key\":");
+        key = deviceDefinition.substring(pos + 7, deviceDefinition.indexOf("\"", pos + 7));
         return key;
     }
 }

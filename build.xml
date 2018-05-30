@@ -70,4 +70,29 @@
     nbproject/build-impl.xml file. 
 
     -->
+    <target name="-post-init">
+        <property name="version" value="1.0"/>
+        <property name="cricket-version" value="1.2.44_8" />
+        <property name="cricket-jar-location" value="lib/cricket-${cricket-version}.jar"/>
+        <property name="cricket-dev-location" value="/home/greg/workspace/Cricket"/>
+    </target>
+    <target name="get-cricket-dev-version" depends="init">
+        <delete file="lib/cricket-${cricket-version}.jar"/>
+        <copy file="${cricket-dev-location}/dist/cricket-${cricket-version}.jar" todir="lib" force="true"/>
+    </target>
+    <target name="get-dependencies" depends="init" description="upload Cricket MSF library">
+        <mkdir dir="lib"/>
+        <get
+            src="https://github.com/gskorupa/Cricket/releases/download/${cricket-version}/cricket-${cricket-version}.jar"
+            dest="lib/cricket-${cricket-version}.jar" 
+            usetimestamp="true" 
+            ignoreerrors="false"
+        />
+        <get 
+            src="https://github.com/gskorupa/Cricket/releases/download/${cricket-version}/cricket-${cricket-version}-javadoc.jar"
+            dest="lib/cricket-${cricket-version}-javadoc.jar" 
+            usetimestamp="true" 
+            ignoreerrors="true"
+        />
+    </target>
 </project>

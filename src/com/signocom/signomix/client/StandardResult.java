@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Grzegorz Skorupa <g.skorupa at gmail.com>.
+ * Copyright 2017 Grzegorz Skorupa <g.skorupa at gmail.com>.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,19 +15,13 @@
  */
 package com.signocom.signomix.client;
 
-//import com.sun.net.httpserver.Headers;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-//import java.util.List;
-//import javax.xml.bind.annotation.XmlAccessType;
-//import javax.xml.bind.annotation.XmlAccessorType;
 
 /**
  *
  * @author greg
  */
-
-//@XmlAccessorType (XmlAccessType.FIELD)
 public class StandardResult implements Result {
     
     public final static int SC_OK = 200;
@@ -59,15 +53,12 @@ public class StandardResult implements Result {
     private Date modificationDate;
     private String modificationDateFormatted;
     private int maxAge;
-    //private Headers headers;
-    
     private long responseTime;
 
     public StandardResult() {
         setCode(SC_OK);
         setModificationDate(new Date());
         maxAge = 0;
-        //headers = new Headers();
         responseTime = 0;
     }
 
@@ -76,12 +67,12 @@ public class StandardResult implements Result {
         setData(data);
         setModificationDate(new Date());
         maxAge = 0;
-        //headers = new Headers();
     }
 
     /**
      * @return the status code
      */
+    @Override
     public int getCode() {
         return code;
     }
@@ -89,6 +80,7 @@ public class StandardResult implements Result {
     /**
      * @param code the status code to set
      */
+    @Override
     public void setCode(int code) {
         this.code = code;
     }
@@ -96,6 +88,7 @@ public class StandardResult implements Result {
     /**
      * @return the status message
      */
+    @Override
     public String getMessage() {
         return message;
     }
@@ -103,6 +96,7 @@ public class StandardResult implements Result {
     /**
      * @param message the message to set
      */
+    @Override
     public void setMessage(String message) {
         this.message = message;
     }
@@ -110,6 +104,7 @@ public class StandardResult implements Result {
     /**
      * @return the data
      */
+    @Override
     public Object getData() {
         return data;
     }
@@ -117,14 +112,17 @@ public class StandardResult implements Result {
     /**
      * @param data the data to set
      */
+    @Override
     public void setData(Object data) {
         this.data = data;
     }
 
+    @Override
     public byte[] getPayload() {
         return payload;
     }
 
+    @Override
     public void setPayload(byte[] payload) {
         this.payload = payload;
     }
@@ -133,14 +131,17 @@ public class StandardResult implements Result {
         this.payload = payload.getBytes();
     }
 
+    @Override
     public String getFileExtension() {
         return fileExtension;
     }
 
+    @Override
     public void setFileExtension(String fileExt) {
-        this.fileExtension = fileExtension;
+        this.fileExtension = fileExt;
     }
 
+    @Override
     public void setModificationDate(Date date) {
         modificationDate = date;
         SimpleDateFormat dt1 = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss z");
@@ -148,10 +149,12 @@ public class StandardResult implements Result {
 
     }
 
+    @Override
     public Date getModificationDate() {
         return modificationDate;
     }
 
+    @Override
     public String getModificationDateFormatted() {
         return modificationDateFormatted;
     }
@@ -165,23 +168,6 @@ public class StandardResult implements Result {
     public void setMaxAge(int maxAge){
         this.maxAge = maxAge;
     }
-    
-    /*
-    @Override
-    public void setHeader(String name, String value){
-        headers.add(name, value);
-    }
-    
-    @Override
-    public void setHeader(String name, List values){
-        headers.put(name, values);
-    }
-    
-    @Override
-    public Headers getHeaders(){
-        return headers;
-    }
-    */
     
     @Override
     public void setResponseTime(long time) {
