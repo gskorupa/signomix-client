@@ -49,7 +49,7 @@ public class SignomixClient {
     public static void main(String[] args) {
 
         String url;
-        url = "https://signomix.signocom.com";
+        url = "https://signomix.com";
         //url = "http://localhost:8080";
         SignomixClient client = new SignomixClient(url, true, 1, "main");
 
