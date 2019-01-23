@@ -7,5 +7,5 @@ An example of using the library can be found in the SignimixClient. main () meth
 
 Before you start, make sure you have created your account at  [https://signomix.com](https://signomix.com)
 
-More information [https://signomix.com/#doc,developer](https://signomix.com/#doc,developer)
+More information [https://signomix.com/app/#doc,developer](https://signomix.com/app/#doc,developer)
 
